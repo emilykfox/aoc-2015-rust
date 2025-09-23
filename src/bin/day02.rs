@@ -7,15 +7,14 @@ struct Measurements {
 }
 
 fn main() {
-    let re = regex::Regex::new(r"(\d+)x(\d+)x(\d+)").unwrap();
     let measurements = stdin()
         .lines()
         .map_while(Result::ok)
         .filter_map(|line| {
-            let captures = re.captures(&line)?;
-            let length = captures.get(1)?.as_str().parse::<u32>().ok()?;
-            let width = captures.get(2)?.as_str().parse::<u32>().ok()?;
-            let height = captures.get(3)?.as_str().parse::<u32>().ok()?;
+            let mut parts = line.split('x');
+            let length = parts.next()?.parse::<u32>().ok()?;
+            let width = parts.next()?.parse::<u32>().ok()?;
+            let height = parts.next()?.parse::<u32>().ok()?;
             Some(Measurements {
                 length,
                 width,
