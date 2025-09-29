@@ -11,19 +11,24 @@ enum InputType {
 }
 
 #[derive(Clone)]
-struct Wire {
+struct Wire<'a> {
     signal: Option<u16>,
     input_type: InputType,
-    left: Option<String>,
-    right: String,
+    left: Option<&'a str>,
+    right: &'a str,
 }
 
 fn main() {
     let re = regex::Regex::new(r"(?:(?<left>[a-z0-9]+) )?(?:(?<and>AND )|(?<or>OR )|(?<lshift>LSHIFT )|(?<rshift>RSHIFT )|(?<not>NOT )|^)(?<right>[a-z0-9]+) -> (?<to>[a-z]+)").unwrap();
 
-    let mut wires = HashMap::<String, Wire>::new();
-    stdin().lines().map_while(Result::ok).for_each(|line| {
-        let captures = re.captures(&line).expect(&line);
+    let lines = stdin()
+        .lines()
+        .map_while(Result::ok)
+        .collect::<Vec<String>>();
+
+    let mut wires = HashMap::<&str, Wire>::new();
+    for line in lines.iter() {
+        let captures = re.captures(line).expect(line);
 
         let input_type = if captures.name("and").is_some() {
             InputType::And
@@ -42,20 +47,18 @@ fn main() {
         let wire = Wire {
             signal: None,
             input_type,
-            left: captures
-                .name("left")
-                .map(|found| found.as_str().to_string()),
-            right: captures["right"].to_string(),
+            left: captures.name("left").map(|found| found.as_str()),
+            right: captures.name("right").unwrap().as_str(),
         };
 
-        wires.insert(captures["to"].to_string(), wire);
-    });
+        wires.insert(captures.name("to").unwrap().as_str(), wire);
+    }
 
     println!("Solution: {}", get_signal("a", &mut wires));
     // println!("Part 2: {}", total_brightness);
 }
 
-fn get_signal(name: &str, wires: &mut HashMap<String, Wire>) -> u16 {
+fn get_signal(name: &str, wires: &mut HashMap<&str, Wire>) -> u16 {
     let wire = &wires[name];
     if let Some(signal) = wire.signal {
         return signal;
@@ -69,7 +72,7 @@ fn get_signal(name: &str, wires: &mut HashMap<String, Wire>) -> u16 {
     let right_signal = wire
         .right
         .parse::<u16>()
-        .unwrap_or_else(|_| get_signal(&wire.right, wires));
+        .unwrap_or_else(|_| get_signal(wire.right, wires));
 
     let signal = match wire.input_type {
         InputType::Direct => right_signal,
