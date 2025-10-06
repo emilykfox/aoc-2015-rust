@@ -58,7 +58,7 @@ fn main() {
     let num_new_molecules = new_molecules.len();
     println!("Part 1: {num_new_molecules}");
 
-    let mut memo_table = HashMap::<(&[&str], &[&str]), Option<usize>>::new();
+    let mut memo_table = HashMap::<(*const [&str], *const [&str]), Option<usize>>::new();
     let fewest = fewest_replacements(&medicine, &["e"], &replacements, &mut memo_table).unwrap();
     println!("Part 2: {fewest}");
 }
@@ -67,7 +67,7 @@ fn fewest_replacements<'a>(
     target: &'a [&'a str],
     source: &'a [&'a str],
     replacements: &'a HashMap<&'a str, Vec<Vec<&'a str>>>,
-    memo_table: &mut HashMap<(&'a [&'a str], &'a [&'a str]), Option<usize>>,
+    memo_table: &mut HashMap<(*const [&'a str], *const [&'a str]), Option<usize>>,
 ) -> Option<usize> {
     if !memo_table.contains_key(&(target, source)) {
         let fewest = if target.len() <= 1 {
@@ -106,5 +106,5 @@ fn fewest_replacements<'a>(
         memo_table.insert((target, source), fewest);
     }
 
-    memo_table[&(target, source)]
+    memo_table[&(target as *const [&str], source as *const [&str])]
 }
